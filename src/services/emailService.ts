@@ -113,7 +113,6 @@ export const emailService = {
     return Object.entries(counts)
       .map(([estado, count]) => ({ estado, count }))
       .sort((a, b) => b.count - a.count)
-      .slice(0, 5);
   },
 
   async getTopDestinatarios(): Promise<TopDestinatario[]> {
