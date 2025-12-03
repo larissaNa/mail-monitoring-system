@@ -64,3 +64,23 @@ export function useCreateEmail() {
   });
 }
 
+export function useDeleteEmail() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      return await emailService.delete(id);
+    },
+    onSuccess: () => {
+      toast({ title: 'E-mail excluído com sucesso!' });
+      queryClient.invalidateQueries({ queryKey: ['emails'] });
+      queryClient.invalidateQueries({ queryKey: ['pending-emails'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
+    },
+    onError: (error: Error) => {
+      toast({ variant: 'destructive', title: 'Erro ao excluir', description: error.message });
+    },
+  });
+}
+

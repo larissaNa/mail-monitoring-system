@@ -1,10 +1,13 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Mail, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Eye, Trash, Mail, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Email } from '@/types';
 import { formatters } from '@/lib/formatters';
+import { useDeleteEmail } from '@/hooks/useEmailMutations';
 
 interface EmailTableProps {
   emails: Email[];
@@ -15,6 +18,8 @@ interface EmailTableProps {
 }
 
 export function EmailTable({ emails, isLoading, currentPage, totalPages, onPageChange }: EmailTableProps) {
+  const [emailIdToDelete, setEmailIdToDelete] = useState<string | null>(null);
+  const deleteEmailMutation = useDeleteEmail();
   if (isLoading) {
     return (
       <Card>
@@ -74,12 +79,25 @@ export function EmailTable({ emails, isLoading, currentPage, totalPages, onPageC
                   <td className="p-4 text-muted-foreground">
                     {formatters.locationShort(email.estado, email.municipio)}
                   </td>
-                  <td className="p-4">
+                  <td className="p-4 flex gap-2">
                     <Link to={`/email/${email.id}`}>
                       <Button variant="ghost" size="icon">
                         <Eye className="h-4 w-4" />
                       </Button>
                     </Link>
+
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-muted-foreground hover:text-red-600 hover:bg-red-50"
+                      onClick={() => setEmailIdToDelete(email.id)}
+                      disabled={deleteEmailMutation.isPending}>
+                      {deleteEmailMutation.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Trash className="h-4 w-4" />
+                      )}
+                    </Button>
                   </td>
                 </tr>
               ))}
@@ -113,6 +131,32 @@ export function EmailTable({ emails, isLoading, currentPage, totalPages, onPageC
           </div>
         )}
       </CardContent>
+
+      <AlertDialog open={!!emailIdToDelete} onOpenChange={(open) => !open && setEmailIdToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir e-mail</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir este e-mail? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex gap-3 justify-end">
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (emailIdToDelete) {
+                  deleteEmailMutation.mutate(emailIdToDelete, {
+                    onSuccess: () => setEmailIdToDelete(null),
+                  });
+                }
+              }}
+              disabled={deleteEmailMutation.isPending}
+              className="bg-red-600 hover:bg-red-700">
+              {deleteEmailMutation.isPending ? 'Excluindo...' : 'Excluir'}
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }
