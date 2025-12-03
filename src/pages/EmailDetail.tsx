@@ -1,23 +1,16 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { emailService } from '@/services/emailService';
 import { PageHeader } from '@/components/ui/page-header';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { LocationSelect } from '@/components/ui/location-select';
-import { useToast } from '@/hooks/use-toast';
 import { 
   ArrowLeft, 
-  Pencil, 
   Save, 
   X, 
   Loader2,
-  Mail,
-  User,
-  Calendar,
-  FileText,
-  MapPin
+  Mail
 } from 'lucide-react';
 import {
   Dialog,
@@ -26,12 +19,12 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { EmailDetailView } from '@/components/emails/EmailDetailView';
+import { useUpdateEmail } from '@/hooks/useEmailMutations';
 
 export default function EmailDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
   
   const [editOpen, setEditOpen] = useState(false);
   const [editState, setEditState] = useState('');
@@ -43,31 +36,25 @@ export default function EmailDetail() {
     enabled: !!id,
   });
 
-  const updateMutation = useMutation({
-    mutationFn: async () => {
-      if (!email) return;
-      await emailService.update(email.id, {
-        estado: editState,
-        municipio: editMunicipio,
-        classificado: !!(editState && editMunicipio),
-      });
-    },
-    onSuccess: () => {
-      toast({ title: 'Localização atualizada!' });
-      setEditOpen(false);
-      queryClient.invalidateQueries({ queryKey: ['email', id] });
-      queryClient.invalidateQueries({ queryKey: ['emails'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
-    },
-    onError: (error: Error) => {
-      toast({ variant: 'destructive', title: 'Erro', description: error.message });
-    },
-  });
+  const updateMutation = useUpdateEmail();
 
   const openEditDialog = () => {
     setEditState(email?.estado || '');
     setEditMunicipio(email?.municipio || '');
     setEditOpen(true);
+  };
+
+  const handleSave = async () => {
+    if (!email) return;
+    await updateMutation.mutateAsync({
+      id: email.id,
+      updates: {
+        estado: editState,
+        municipio: editMunicipio,
+        classificado: !!(editState && editMunicipio),
+      },
+    });
+    setEditOpen(false);
   };
 
   if (isLoading) {
@@ -100,92 +87,12 @@ export default function EmailDetail() {
         </Button>
       </PageHeader>
 
-      <Card className="max-w-3xl animate-fade-in">
-        <CardContent className="p-6 space-y-6">
-          {/* Header Info */}
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-primary-light">
-                <User className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Remetente</p>
-                <p className="font-medium">{email.remetente}</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-accent-light">
-                <Mail className="h-5 w-5 text-accent" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Destinatário</p>
-                <p className="font-medium">{email.destinatario}</p>
-              </div>
-            </div>
-          </div>
+      <EmailDetailView
+        email={email}
+        onEdit={openEditDialog}
+        onBack={() => navigate(-1)}
+      />
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-info-light">
-                <Calendar className="h-5 w-5 text-info" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Data</p>
-                <p className="font-medium">
-                  {new Date(email.data_envio).toLocaleString('pt-BR')}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-success-light">
-                <MapPin className="h-5 w-5 text-success" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Localização</p>
-                <p className="font-medium">
-                  {email.estado && email.municipio 
-                    ? `${email.estado} - ${email.municipio}`
-                    : 'Não classificado'
-                  }
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Subject */}
-          <div className="flex items-start gap-3">
-            <div className="p-2 rounded-lg bg-warning-light">
-              <FileText className="h-5 w-5 text-warning" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm text-muted-foreground">Assunto</p>
-              <p className="font-semibold text-lg">{email.assunto}</p>
-            </div>
-          </div>
-
-          {/* Message Body */}
-          <div className="border-t pt-6">
-            <p className="text-sm font-medium text-muted-foreground mb-3">Mensagem</p>
-            <div className="bg-muted/50 rounded-lg p-4 whitespace-pre-wrap">
-              {email.corpo || 'Sem conteúdo'}
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="border-t pt-6 flex gap-3">
-            <Button onClick={openEditDialog}>
-              <Pencil className="h-4 w-4 mr-2" />
-              Editar Local
-            </Button>
-            <Button variant="outline" onClick={() => navigate(-1)}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Voltar
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Edit Dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent>
           <DialogHeader>
@@ -208,7 +115,7 @@ export default function EmailDetail() {
               Cancelar
             </Button>
             <Button 
-              onClick={() => updateMutation.mutate()}
+              onClick={handleSave}
               disabled={updateMutation.isPending}
             >
               {updateMutation.isPending ? (
