@@ -1,18 +1,18 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "../src/view/components/ui/toaster";
+import { Toaster as Sonner } from "../src/view/components/ui/sonner";
+import { TooltipProvider } from "../src/view/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "@/hooks/useAuth";
-import { MainLayout } from "@/components/layout/MainLayout";
+import { AuthProvider } from "@/viewmodel/auth/useAuth";
+import { MainLayout } from "../src/view/components/layout/MainLayout";
 
-import Auth from "@/pages/Auth";
-import Dashboard from "@/pages/Dashboard";
-import PendingEmails from "@/pages/PendingEmails";
-import NewEmail from "@/pages/NewEmail";
-import EmailList from "@/pages/EmailList";
-import EmailDetail from "@/pages/EmailDetail";
-import NotFound from "@/pages/NotFound";
+import Auth from "@/view/Auth";
+import Dashboard from "@/view/Dashboard";
+import PendingEmails from "@/view/PendingEmails";
+import NewEmail from "@/view/NewEmail";
+import EmailList from "@/view/EmailList";
+import EmailDetail from "@/view/EmailDetail";
+import NotFound from "@/view/NotFound";
 
 const queryClient = new QueryClient();
 
