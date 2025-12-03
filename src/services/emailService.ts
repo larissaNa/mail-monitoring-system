@@ -123,12 +123,37 @@ export const emailService = {
     if (error) throw error;
     
     const counts: Record<string, number> = {};
+    const formatosOriginais: Record<string, string> = {}; // Para preservar formato original
+    
+    // Processar cada email e contar destinatários individualmente
     data.forEach(email => {
-      counts[email.destinatario] = (counts[email.destinatario] || 0) + 1;
+      if (!email.destinatario) return;
+      
+      // Separar múltiplos destinatários (podem estar separados por vírgula)
+      const destinatarios = email.destinatario
+        .split(',')
+        .map(d => d.trim())
+        .filter(d => d && d.includes('@')); // Filtrar apenas e-mails válidos
+      
+      // Contar cada destinatário individualmente
+      destinatarios.forEach(destinatario => {
+        const emailNormalizado = destinatario.toLowerCase().trim();
+        
+        // Contar (usando lowercase para agrupar)
+        counts[emailNormalizado] = (counts[emailNormalizado] || 0) + 1;
+        
+        // Preservar formato original do primeiro encontrado
+        if (!formatosOriginais[emailNormalizado]) {
+          formatosOriginais[emailNormalizado] = destinatario.trim();
+        }
+      });
     });
     
     return Object.entries(counts)
-      .map(([destinatario, count]) => ({ destinatario, count }))
+      .map(([emailNormalizado, count]) => ({ 
+        destinatario: formatosOriginais[emailNormalizado] || emailNormalizado,
+        count 
+      }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 3);
   },
