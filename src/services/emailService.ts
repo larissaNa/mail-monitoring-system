@@ -162,5 +162,26 @@ export const emailService = {
     });
     
     return Object.entries(counts).map(([date, count]) => ({ date, count }));
+  },
+
+  /**
+   * Salva um e-mail recebido via inbound (webhook do Resend)
+   * Este método é usado pela Edge Function do Supabase
+   */
+  async saveFromInbound(emailData: {
+    remetente: string;
+    destinatario: string;
+    assunto: string;
+    corpo: string | null;
+    data_envio: string;
+  }): Promise<Email> {
+    const emailToInsert = {
+      ...emailData,
+      estado: null,
+      municipio: null,
+      classificado: false
+    };
+
+    return this.create(emailToInsert);
   }
 };
