@@ -11,7 +11,7 @@ interface EmailData {
   remetente: string;
   destinatario: string;
   assunto: string;
-  corpo: string | null;  // apenas um campo agora, texto puro
+  corpo: string | null; 
   data_envio: string;
   estado: string | null;
   municipio: string | null;
@@ -21,11 +21,10 @@ interface EmailData {
   updated_at?: string;
 }
 
-// Função para converter HTML em texto puro
 function htmlToText(html: string | null): string | null {
   if (!html) return null;
   return html
-    .replace(/<[^>]+>/g, "")   // Remove tags
+    .replace(/<[^>]+>/g, "")   
     .replace(/&nbsp;/g, " ")
     .replace(/&amp;/g, "&")
     .replace(/&lt;/g, "<")
@@ -73,16 +72,181 @@ serve(async (req) => {
     }
 
     const fullEmail = await resendResponse.json();
-    console.log("Email completo:", JSON.stringify(fullEmail, null, 2));
+    console.log("Email completo (raw):", JSON.stringify(fullEmail, null, 2));
+    console.log("Campo 'to' tipo:", typeof fullEmail.to, "valor:", fullEmail.to);
+    console.log("Campo 'cc' tipo:", typeof fullEmail.cc, "valor:", fullEmail.cc);
+    console.log("Campo 'bcc' tipo:", typeof fullEmail.bcc, "valor:", fullEmail.bcc);
 
-    // --- Preparar dados para inserir no Supabase ---
-    const corpo = htmlToText(fullEmail.html || fullEmail.text || null); // já limpo
+    const sistemaEmail = "teste@nareefa.resend.app";
+
+    // Função para extrair apenas o e-mail de uma string que pode conter "Nome <email@exemplo.com>" ou apenas "email@exemplo.com"
+    const extrairEmailDeString = (str: string): string => {
+      if (!str) return "";
+      
+      // Se contém < e >, extrair o que está entre eles
+      const match = str.match(/<([^>]+)>/);
+      if (match && match[1]) {
+        return match[1].trim();
+      }
+      
+      // Se não, retornar a string inteira (pode ser apenas o email)
+      return str.trim();
+    };
+
+    // Função auxiliar para extrair e-mails de um campo (pode ser string, array de strings, ou array de objetos)
+    const extrairEmails = (campo: any): string[] => {
+      if (!campo) return [];
+      
+      // Se for string
+      if (typeof campo === "string") {
+        // Se contém vírgulas, pode ser múltiplos e-mails separados
+        if (campo.includes(",")) {
+          return campo
+            .split(",")
+            .map(item => extrairEmailDeString(item.trim()))
+            .filter(email => email && email.includes("@"));
+        }
+        // Se não, é um único e-mail (pode ter nome ou não)
+        const email = extrairEmailDeString(campo);
+        return email && email.includes("@") ? [email] : [];
+      }
+      
+      // Se for array
+      if (Array.isArray(campo)) {
+        return campo
+          .map((item: any) => {
+            // Se o item é string, extrair email
+            if (typeof item === "string") {
+              return extrairEmailDeString(item);
+            }
+            // Se o item é objeto com propriedade email
+            if (item && typeof item === "object") {
+              if (item.email) {
+                return typeof item.email === "string" 
+                  ? extrairEmailDeString(item.email) 
+                  : item.email;
+              }
+              // Pode ter propriedade name e email separados
+              if (item.address || item.mailbox) {
+                return extrairEmailDeString(item.address || item.mailbox);
+              }
+            }
+            return null;
+          })
+          .filter((email): email is string => !!email && email.includes("@"));
+      }
+      
+      return [];
+    };
+
+    // Coletar todos os destinatários (to, cc, bcc)
+    // Verificar também estruturas aninhadas que o Resend pode retornar
+    const toField = fullEmail.to || fullEmail.recipients?.to || fullEmail.data?.to;
+    const ccField = fullEmail.cc || fullEmail.recipients?.cc || fullEmail.data?.cc;
+    const bccField = fullEmail.bcc || fullEmail.recipients?.bcc || fullEmail.data?.bcc;
+    
+    // IMPORTANTE: Os headers também contêm os destinatários reais!
+    // O campo 'to' pode conter apenas o endereço inbound, mas os headers têm todos os destinatários
+    const headers = fullEmail.headers || {};
+    const toHeader = headers.to || headers.To || "";
+    const ccHeader = headers.cc || headers.Cc || "";
+    const bccHeader = headers.bcc || headers.Bcc || "";
+    
+    console.log("Headers 'to':", toHeader);
+    console.log("Headers 'cc':", ccHeader);
+    console.log("Headers 'bcc':", bccHeader);
+    
+    // Coletar de todas as fontes: campos diretos E headers
+    const todosDestinatarios = [
+      ...extrairEmails(toField),
+      ...extrairEmails(ccField),
+      ...extrairEmails(bccField),
+      ...extrairEmails(toHeader),  // Headers têm os destinatários reais!
+      ...extrairEmails(ccHeader),
+      ...extrairEmails(bccHeader),
+    ];
+
+    console.log("Todos os destinatários extraídos (antes do filtro):", todosDestinatarios);
+    console.log("E-mail do sistema a ser filtrado:", sistemaEmail);
+
+    // Normalizar e-mails para comparação (lowercase e trim)
+    const todosDestinatariosNormalizados = todosDestinatarios.map(email => email.toLowerCase().trim());
+
+    // Remover duplicatas mantendo o formato original
+    const destinatariosUnicos: string[] = [];
+    const vistos = new Set<string>();
+    
+    todosDestinatarios.forEach((email, index) => {
+      const normalizado = todosDestinatariosNormalizados[index];
+      if (!vistos.has(normalizado)) {
+        vistos.add(normalizado);
+        destinatariosUnicos.push(email);
+      }
+    });
+
+    console.log("Destinatários únicos (após remover duplicatas):", destinatariosUnicos);
+
+    // Filtrar apenas e-mails de clientes (remover e-mail do sistema)
+    const sistemaEmailNormalizado = sistemaEmail.toLowerCase().trim();
+    const destinatariosClientes = destinatariosUnicos.filter(email => {
+      const emailNormalizado = email.toLowerCase().trim();
+      const isSistema = emailNormalizado === sistemaEmailNormalizado;
+      if (isSistema) {
+        console.log(`Removendo e-mail do sistema: ${email}`);
+      }
+      return !isSistema;
+    });
+
+    console.log("Destinatários de clientes (após filtrar sistema):", destinatariosClientes);
+
+    // Validar que há pelo menos um destinatário cliente
+    if (destinatariosClientes.length === 0) {
+      console.warn("Nenhum destinatário cliente encontrado. Todos os destinatários são do sistema.");
+      return new Response(
+        JSON.stringify({ 
+          error: "No client recipients found", 
+          message: "All recipients are system emails" 
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
+      );
+    }
+
+    // Juntar todos os destinatários de clientes separados por vírgula
+    const destinatarioFinal = destinatariosClientes.join(", ");
+    
+    console.log("Destinatários filtrados (apenas clientes):", destinatariosClientes);
+    console.log("Destinatário final salvo:", destinatarioFinal);
+    
+    const corpo = htmlToText(fullEmail.html || fullEmail.text || null); 
+
+    // Validar campos obrigatórios antes de salvar
+    if (!fullEmail.from || !destinatarioFinal || !fullEmail.subject) {
+      console.error("Campos obrigatórios faltando:", {
+        from: fullEmail.from,
+        destinatario: destinatarioFinal,
+        subject: fullEmail.subject,
+      });
+      return new Response(
+        JSON.stringify({ 
+          error: "Missing required fields", 
+          details: "from, destinatario, or subject is missing" 
+        }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
+      );
+    }
+
     const emailData: EmailData = {
       remetente: fullEmail.from,
-      destinatario: (fullEmail.to || []).join(", "),
-      assunto: fullEmail.subject,
+      destinatario: destinatarioFinal,
+      assunto: fullEmail.subject || "(Sem assunto)",
       corpo,
-      data_envio: fullEmail.created_at,
+      data_envio: fullEmail.created_at || new Date().toISOString(),
       estado: null,
       municipio: null,
       classificado: false,
@@ -90,6 +254,13 @@ serve(async (req) => {
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
+
+    console.log("Dados do email a serem salvos:", {
+      remetente: emailData.remetente,
+      destinatario: emailData.destinatario,
+      assunto: emailData.assunto,
+      data_envio: emailData.data_envio,
+    });
 
     // --- Conectar ao Supabase ---
     const supabaseUrl = Deno.env.get("PROJECT_URL")!;
