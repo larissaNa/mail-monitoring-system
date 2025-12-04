@@ -64,9 +64,14 @@ export function ChartsSection({ emailsByState, trendData }: ChartsSectionProps) 
                     border: '1px solid hsl(var(--border))',
                     borderRadius: '8px'
                   }}
-                  labelFormatter={(value) => {
-                    const date = new Date(value);
-                    return date.toLocaleDateString('pt-BR');
+                  // value vem como "YYYY-MM-DD" (já no dia correto), então formatamos manualmente
+                  labelFormatter={(value: string) => {
+                    const parts = value.split('-');
+                    if (parts.length === 3) {
+                      const [year, month, day] = parts;
+                      return `${day}/${month}/${year}`;
+                    }
+                    return value;
                   }}
                 />
                 <Line 
