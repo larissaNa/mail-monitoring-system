@@ -11,7 +11,7 @@ interface ChartsSectionProps {
 
 export function ChartsSection({ emailsByState, trendData }: ChartsSectionProps) {
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="grid gap-6 lg:grid-cols-2 w-full">
       <Card className="animate-fade-in stagger-1">
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle className="text-lg font-semibold flex items-center gap-2">
@@ -20,9 +20,12 @@ export function ChartsSection({ emailsByState, trendData }: ChartsSectionProps) 
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-64">
+          <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={emailsByState}>
+              <BarChart 
+                data={emailsByState}
+                margin={{ top: 16, right: 8, left: 0, bottom: 0 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                 <XAxis dataKey="estado" className="text-xs" />
                 <YAxis className="text-xs" />
@@ -48,9 +51,12 @@ export function ChartsSection({ emailsByState, trendData }: ChartsSectionProps) 
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-64">
+          <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={trendData}>
+              <LineChart 
+                data={trendData}
+                margin={{ top: 16, right: 8, left: 0, bottom: 0 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                 <XAxis 
                   dataKey="date" 

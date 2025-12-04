@@ -8,7 +8,7 @@ interface TopDestinatariosCardProps {
 
 export function TopDestinatariosCard({ topDestinatarios }: TopDestinatariosCardProps) {
   return (
-    <Card className="animate-fade-in stagger-3">
+    <Card className="animate-fade-in stagger-3 w-full">
       <CardHeader className="pb-2">
         <CardTitle className="text-lg font-semibold flex items-center gap-2">
           <Users className="h-5 w-5 text-primary" />
@@ -33,7 +33,9 @@ export function TopDestinatariosCard({ topDestinatarios }: TopDestinatariosCardP
                   {index + 1}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium truncate">{item.destinatario}</p>
+                  <p className="font-medium break-all text-sm">
+                    {item.destinatario}
+                  </p>
                 </div>
                 <div className="font-semibold text-muted-foreground">
                   ({item.count})

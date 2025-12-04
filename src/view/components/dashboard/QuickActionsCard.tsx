@@ -5,7 +5,7 @@ import { Clock, Mail, BarChart3, ArrowRight } from 'lucide-react';
 
 export function QuickActionsCard() {
   return (
-    <Card className="animate-fade-in stagger-4">
+    <Card className="animate-fade-in stagger-4 w-full">
       <CardHeader className="pb-2">
         <CardTitle className="text-lg font-semibold">
           Atalhos Rápidos

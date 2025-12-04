@@ -23,7 +23,7 @@ export default function Dashboard() {
         trendData={vm.trendData}
       />
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2 w-full">
         <TopDestinatariosCard topDestinatarios={vm.topDestinatarios} />
         <QuickActionsCard />
       </div>
