@@ -11,8 +11,8 @@ export function QuickActionsCard() {
           Atalhos Rápidos
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
-        <Link to="/pendentes">
+      <CardContent className="space-y-2">
+        <Link to="/pendentes" className="block">
           <Button variant="outline" className="w-full justify-between group">
             <span className="flex items-center gap-2">
               <Clock className="h-4 w-4" />
@@ -21,7 +21,8 @@ export function QuickActionsCard() {
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
           </Button>
         </Link>
-        <Link to="/novo">
+
+        <Link to="/novo" className="block">
           <Button variant="outline" className="w-full justify-between group">
             <span className="flex items-center gap-2">
               <Mail className="h-4 w-4" />
@@ -30,7 +31,8 @@ export function QuickActionsCard() {
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
           </Button>
         </Link>
-        <Link to="/lista">
+
+        <Link to="/lista" className="block">
           <Button variant="outline" className="w-full justify-between group">
             <span className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
