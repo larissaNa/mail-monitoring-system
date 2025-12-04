@@ -33,7 +33,12 @@ export function Sidebar() {
       <Button
         variant="ghost"
         size="icon"
-        className="fixed top-4 left-4 z-50 lg:hidden"
+        className={cn(
+          "fixed top-4 right-4 z-50 lg:hidden rounded-full border border-border shadow-sm transition-colors",
+          mobileOpen
+            ? "bg-muted text-foreground hover:bg-muted/90"
+            : "bg-card/90 text-foreground/80 hover:bg-muted"
+        )}
         onClick={() => setMobileOpen(!mobileOpen)}
       >
         {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
