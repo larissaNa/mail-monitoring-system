@@ -18,8 +18,14 @@ export const formatters = {
   },
 
   chartDate: (dateString: string): string => {
-    const date = new Date(dateString);
-    return `${date.getDate()}/${date.getMonth() + 1}`;
+    const parts = dateString.split('-');
+    if (parts.length === 3) {
+      const day = parseInt(parts[2], 10);
+      const month = parseInt(parts[1], 10);
+      return `${day}/${month}`;
+    }
+    const date = new Date(dateString + 'T00:00:00Z');
+    return `${date.getUTCDate()}/${date.getUTCMonth() + 1}`;
   },
 
   location: (estado: string | null, municipio: string | null): string => {
@@ -37,6 +43,13 @@ export const formatters = {
       return `${estado} / ${municipio}`;
     }
     return '-';
+  },
+
+  datetimeLocalToISO: (datetimeLocal: string): string => {
+    const [datePart, timePart] = datetimeLocal.split('T');
+    const [hours, minutes] = (timePart || '00:00').split(':');
+    
+    return `${datePart}T${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}:00.000Z`;
   },
 };
 

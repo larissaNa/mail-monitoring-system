@@ -11,6 +11,7 @@ import { useAuth } from '@/viewmodel/auth/useAuth';
 import { emailSchema, type EmailFormData } from '@/infrastructure/lib/validationSchemas';
 import { z } from 'zod';
 import { useToast } from '@/view/components/ui/hooks/use-toast';
+import { formatters } from '@/infrastructure/lib/formatters';
 
 interface NewEmailFormProps {
   onSuccess: () => void;
@@ -43,7 +44,7 @@ export function NewEmailForm({ onSuccess, onCancel }: NewEmailFormProps) {
         destinatario: validated.destinatario,
         assunto: validated.assunto,
         corpo: validated.corpo || null,
-        data_envio: new Date(validated.data_envio).toISOString(),
+        data_envio: formatters.datetimeLocalToISO(validated.data_envio),
         estado: validated.estado,
         municipio: validated.municipio,
         classificado: true,
@@ -59,7 +60,7 @@ export function NewEmailForm({ onSuccess, onCancel }: NewEmailFormProps) {
   };
 
   return (
-    <Card className="max-w-2xl animate-fade-in">
+    <Card className="max-w-7xl animate-fade-in">
       <CardContent className="p-6">
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-2">
@@ -149,4 +150,3 @@ export function NewEmailForm({ onSuccess, onCancel }: NewEmailFormProps) {
     </Card>
   );
 }
-
