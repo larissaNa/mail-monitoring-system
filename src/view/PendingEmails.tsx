@@ -3,7 +3,7 @@ import { Button } from "./components/ui/button";
 import { Save, Download, Loader2 } from "lucide-react";
 import { EmailFilters } from "./components/emails/EmailFilters";
 import { PendingEmailsTable } from "./components/emails/PendingEmailsTable";
-import { usePendingEmailsViewModel } from "@/viewmodel/usePendingEmailsViewModel";
+import { usePendingEmailsViewModel } from "@/viewmodel/email/usePendingEmailsViewModel";
 
 export default function PendingEmails() {
   const vm = usePendingEmailsViewModel();
@@ -16,8 +16,8 @@ export default function PendingEmails() {
       >
         <Button
           variant="outline"
-          onClick={vm.handleExport}
-          disabled={vm.emails.length === 0}
+          onClick={vm.exportCsv}
+          disabled={vm.emailsView.length === 0}
         >
           <Download className="h-4 w-4 mr-2" />
           Exportar
@@ -41,11 +41,11 @@ export default function PendingEmails() {
       />
 
       <PendingEmailsTable
-        emails={vm.emails}
+        emails={vm.emailsView}
         isLoading={vm.isLoading}
         emailUpdates={vm.emailUpdates}
         onLocationChange={vm.handleLocationChange}
-        getEmailLocation={vm.getEmailLocation}
+        getEmailLocation={(id) => vm.emailUpdates[id]}
       />
     </div>
   );

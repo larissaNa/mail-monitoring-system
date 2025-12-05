@@ -1,25 +1,45 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Button } from '../ui/button';
-import { Card, CardContent } from '../ui/card';
-import { Badge } from '../ui/badge';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from '../ui/alert-dialog';
-import { Eye, Trash, Mail, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Email } from '@/model/entities';
-import { formatters } from '@/infrastructure/lib/formatters';
-import { useDeleteEmail } from '../../../viewmodel/email/useEmailMutations';
+import { Link } from "react-router-dom";
+import { Button } from "../ui/button";
+import { Card, CardContent } from "../ui/card";
+import { Badge } from "../ui/badge";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog";
+import { Eye, Trash, Mail, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 
-interface EmailTableProps {
-  emails: Email[];
-  isLoading?: boolean;
+interface EmailTableViewProps {
+  rows: {
+    id: string;
+    remetente: string;
+    destinatario: string;
+    assunto: string;
+    classificado: boolean;
+    local: string;
+    detailsUrl: string;
+  }[];
+  isLoading: boolean;
   currentPage: number;
   totalPages: number;
+
+  // actions vindas da ViewModel
   onPageChange: (page: number) => void;
+  onRequestDelete: (id: string) => void;
+  onCancelDelete: () => void;
+  onConfirmDelete: () => void;
+  deleteDialogOpen: boolean;
+  deleting: boolean;
 }
 
-export function EmailTable({ emails, isLoading, currentPage, totalPages, onPageChange }: EmailTableProps) {
-  const [emailIdToDelete, setEmailIdToDelete] = useState<string | null>(null);
-  const deleteEmailMutation = useDeleteEmail();
+export function EmailTableView({
+  rows,
+  isLoading,
+  currentPage,
+  totalPages,
+  onPageChange,
+  onRequestDelete,
+  onCancelDelete,
+  onConfirmDelete,
+  deleteDialogOpen,
+  deleting,
+}: EmailTableViewProps) {
   if (isLoading) {
     return (
       <Card>
@@ -32,7 +52,7 @@ export function EmailTable({ emails, isLoading, currentPage, totalPages, onPageC
     );
   }
 
-  if (emails.length === 0) {
+  if (rows.length === 0) {
     return (
       <Card>
         <CardContent className="p-0">
@@ -52,35 +72,31 @@ export function EmailTable({ emails, isLoading, currentPage, totalPages, onPageC
           <table className="w-full">
             <thead>
               <tr className="border-b bg-muted/50">
-                <th className="text-left p-4 font-medium">Remetente</th>
-                <th className="text-left p-4 font-medium">Destinatário</th>
-                <th className="text-left p-4 font-medium">Assunto</th>
-                <th className="text-left p-4 font-medium">Local</th>
-                <th className="text-left p-4 font-medium w-20">Ações</th>
+                <th className="p-4">Remetente</th>
+                <th className="p-4">Destinatário</th>
+                <th className="p-4">Assunto</th>
+                <th className="p-4">Local</th>
+                <th className="p-4 w-20">Ações</th>
               </tr>
             </thead>
             <tbody>
-              {emails.map((email) => (
-                <tr key={email.id} className="border-b table-row-hover">
-                  <td className="p-4">
-                    <span className="font-medium">{email.remetente}</span>
-                  </td>
-                  <td className="p-4 text-muted-foreground">{email.destinatario}</td>
+              {rows.map(row => (
+                <tr key={row.id} className="border-b table-row-hover">
+                  <td className="p-4">{row.remetente}</td>
+                  <td className="p-4 text-muted-foreground">{row.destinatario}</td>
                   <td className="p-4">
                     <div className="flex items-center gap-2">
-                      <span className="truncate max-w-[200px]">{email.assunto}</span>
-                      {!email.classificado && (
+                      <span className="truncate max-w-[200px]">{row.assunto}</span>
+                      {!row.classificado && (
                         <Badge variant="outline" className="bg-warning-light text-warning border-warning/30">
                           Pendente
                         </Badge>
                       )}
                     </div>
                   </td>
-                  <td className="p-4 text-muted-foreground">
-                    {formatters.locationShort(email.estado, email.municipio)}
-                  </td>
+                  <td className="p-4 text-muted-foreground">{row.local}</td>
                   <td className="p-4 flex gap-2">
-                    <Link to={`/email/${email.id}`}>
+                    <Link to={row.detailsUrl}>
                       <Button variant="ghost" size="icon">
                         <Eye className="h-4 w-4" />
                       </Button>
@@ -90,13 +106,10 @@ export function EmailTable({ emails, isLoading, currentPage, totalPages, onPageC
                       variant="ghost"
                       size="icon"
                       className="text-muted-foreground hover:text-red-600 hover:bg-red-50"
-                      onClick={() => setEmailIdToDelete(email.id)}
-                      disabled={deleteEmailMutation.isPending}>
-                      {deleteEmailMutation.isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Trash className="h-4 w-4" />
-                      )}
+                      onClick={() => onRequestDelete(row.id)}
+                      disabled={deleting}
+                    >
+                      {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash className="h-4 w-4" />}
                     </Button>
                   </td>
                 </tr>
@@ -114,15 +127,16 @@ export function EmailTable({ emails, isLoading, currentPage, totalPages, onPageC
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+                onClick={() => onPageChange(currentPage - 1)}
                 disabled={currentPage === 1}
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
+
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+                onClick={() => onPageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
               >
                 <ChevronRight className="h-4 w-4" />
@@ -132,7 +146,7 @@ export function EmailTable({ emails, isLoading, currentPage, totalPages, onPageC
         )}
       </CardContent>
 
-      <AlertDialog open={!!emailIdToDelete} onOpenChange={(open) => !open && setEmailIdToDelete(null)}>
+      <AlertDialog open={deleteDialogOpen} onOpenChange={open => !open && onCancelDelete()}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir e-mail</AlertDialogTitle>
@@ -140,19 +154,11 @@ export function EmailTable({ emails, isLoading, currentPage, totalPages, onPageC
               Tem certeza que deseja excluir este e-mail? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
+
           <div className="flex gap-3 justify-end">
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (emailIdToDelete) {
-                  deleteEmailMutation.mutate(emailIdToDelete, {
-                    onSuccess: () => setEmailIdToDelete(null),
-                  });
-                }
-              }}
-              disabled={deleteEmailMutation.isPending}
-              className="bg-red-600 hover:bg-red-700">
-              {deleteEmailMutation.isPending ? 'Excluindo...' : 'Excluir'}
+            <AlertDialogCancel onClick={onCancelDelete}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={onConfirmDelete} disabled={deleting} className="bg-red-600 hover:bg-red-700">
+              {deleting ? "Excluindo..." : "Excluir"}
             </AlertDialogAction>
           </div>
         </AlertDialogContent>
@@ -160,4 +166,3 @@ export function EmailTable({ emails, isLoading, currentPage, totalPages, onPageC
     </Card>
   );
 }
-

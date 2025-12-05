@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "../src/view/components/ui/sonner";
 import { TooltipProvider } from "../src/view/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "@/viewmodel/auth/useAuth";
+import { AuthProvider } from "@/infrastructure/auth/authProvider";
 import { MainLayout } from "../src/view/components/layout/MainLayout";
 
 import Auth from "@/view/Auth";
@@ -31,7 +31,7 @@ const App = () => (
               <Route path="/pendentes" element={<PendingEmails />} />
               <Route path="/novo" element={<NewEmail />} />
               <Route path="/lista" element={<EmailList />} />
-              <Route path="/email/:id" element={<EmailDetail />} />
+              <Route path="/emails/:id" element={<EmailDetail />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

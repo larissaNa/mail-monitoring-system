@@ -1,19 +1,29 @@
 import { PageHeader } from "./components/ui/page-header";
 import { Button } from "./components/ui/button";
-import { ArrowLeft, Save, X, Loader2, Mail,} from "lucide-react";
-import {Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,} from "./components/ui/dialog";
+import {
+  ArrowLeft,
+  Save,
+  X,
+  Loader2,
+  Mail
+} from "lucide-react";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "./components/ui/dialog";
 
 import { EmailDetailView } from "./components/emails/EmailDetailView";
 import { LocationSelect } from "./components/ui/location-select";
 
-import { useEmailDetailViewModel } from "@/viewmodel/useEmailDetailViewModel";
+import { useEmailDetailViewModel } from "@/viewmodel/email/useEmailDetailViewModel";
 
 export default function EmailDetail() {
   const vm = useEmailDetailViewModel();
 
-  // ==========================
-  // ESTADOS ESPECIAIS
-  // ==========================
   if (vm.isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -35,10 +45,6 @@ export default function EmailDetail() {
     );
   }
 
-  // ==========================
-  // VIEW PRINCIPAL
-  // ==========================
-
   return (
     <div className="space-y-6">
       <PageHeader title="Detalhes do E-mail">
@@ -49,7 +55,7 @@ export default function EmailDetail() {
       </PageHeader>
 
       <EmailDetailView
-        email={vm.email}
+        formatted={vm.formatted!}
         onEdit={vm.openEditDialog}
         onBack={vm.goBack}
       />

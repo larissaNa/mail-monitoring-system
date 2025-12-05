@@ -1,5 +1,3 @@
-import { Email } from '@/model/entities';
-
 interface ExportRow {
   remetente: string;
   destinatario: string;
@@ -9,27 +7,28 @@ interface ExportRow {
 }
 
 export const csvExporter = {
-  export: (emails: Email[], getLocation: (email: Email) => { estado: string; municipio: string }): void => {
+  exportCsv: (emails: ExportRow[]): void => {
     const headers = ['Remetente', 'Destinatário', 'Data', 'Estado', 'Município'];
-    const rows = emails.map(email => {
-      const loc = getLocation(email);
-      return [
-        email.remetente,
-        email.destinatario,
-        new Date(email.data_envio).toLocaleDateString('pt-BR'),
-        loc.estado,
-        loc.municipio
-      ];
-    });
-    
+
+    const rows = emails.map(email => [
+      email.remetente,
+      email.destinatario,
+      email.data,
+      email.estado,
+      email.municipio
+    ]);
+
     const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
+
     const blob = new Blob([csv], { type: 'text/csv' });
+
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
+
     a.href = url;
     a.download = 'emails_pendentes.csv';
     a.click();
+
     URL.revokeObjectURL(url);
   },
 };
-

@@ -1,16 +1,15 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+
 import { EmailService } from "@/model/services";
-import { useUpdateEmail } from "./email/useEmailMutations";
+import { useUpdateEmail } from "./useEmailMutations";
+import { formatters } from "@/infrastructure/lib/formatters";
 
 export function useEmailDetailViewModel() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  // ==========================
-  // FETCH DO EMAIL
-  // ==========================
   const {
     data: email,
     isLoading,
@@ -21,19 +20,27 @@ export function useEmailDetailViewModel() {
     enabled: !!id,
   });
 
-  // ==========================
-  // STATES DO MODAL DE EDIÇÃO
-  // ==========================
+  const formatted = useMemo(() => {
+    if (!email) return null;
+
+    return {
+      remetente: email.remetente,
+      destinatario: email.destinatario,
+      dataEnvio: formatters.dateTime(email.data_envio),
+      local: formatters.location(email.estado, email.municipio),
+      assunto: email.assunto,
+      corpo: email.corpo || "Sem conteúdo",
+    };
+  }, [email]);
+
+  //States
   const [editOpen, setEditOpen] = useState(false);
   const [editState, setEditState] = useState("");
   const [editMunicipio, setEditMunicipio] = useState("");
 
   const updateMutation = useUpdateEmail();
 
-  // ==========================
-  // ACTIONS
-  // ==========================
-
+  // Actions
   function openEditDialog() {
     if (!email) return;
     setEditState(email.estado || "");
@@ -43,6 +50,7 @@ export function useEmailDetailViewModel() {
 
   async function handleSave() {
     if (!email) return;
+
     await updateMutation.mutateAsync({
       id: email.id,
       updates: {
@@ -51,6 +59,7 @@ export function useEmailDetailViewModel() {
         classificado: !!(editState && editMunicipio),
       },
     });
+
     setEditOpen(false);
   }
 
@@ -67,12 +76,13 @@ export function useEmailDetailViewModel() {
   }
 
   return {
-    // Dados
+    // Data
     email,
+    formatted,
     isLoading,
     error,
 
-    // Edit
+    // Edit State
     editOpen,
     editState,
     editMunicipio,
@@ -84,9 +94,11 @@ export function useEmailDetailViewModel() {
     setEditState,
     setEditMunicipio,
 
-    // Util
+    // Navigation
     goBack,
     goToList,
+
+    // Indicators
     isSaving: updateMutation.isPending,
   };
 }
