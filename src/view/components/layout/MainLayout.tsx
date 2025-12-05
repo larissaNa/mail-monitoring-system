@@ -1,12 +1,13 @@
 import { Outlet, Navigate } from 'react-router-dom';
-import { Sidebar } from './Sidebar';
-import { useAuth } from '@/viewmodel/auth/useAuth';
 import { Loader2 } from 'lucide-react';
+import { Sidebar } from './Sidebar';
+
+import { useMainLayoutViewModel } from '@/viewmodel/layout/useMainLayoutViewModel';
 
 export function MainLayout() {
-  const { user, loading } = useAuth();
+  const vm = useMainLayoutViewModel();
 
-  if (loading) {
+  if (vm.loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
@@ -17,7 +18,7 @@ export function MainLayout() {
     );
   }
 
-  if (!user) {
+  if (!vm.isAuthenticated) {
     return <Navigate to="/auth" replace />;
   }
 

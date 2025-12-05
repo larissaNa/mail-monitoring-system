@@ -5,7 +5,7 @@ import { Mail } from "lucide-react";
 import { LoginForm } from "./components/auth/LoginForm";
 import { SignupForm } from "./components/auth/SignupForm";
 import { ResetPasswordForm } from "./components/auth/ResetPasswordForm";
-import { useAuthViewModel } from "@/viewmodel/useAuthViewModel";
+import { useAuthViewModel } from "@/viewmodel/auth/useAuthViewModel";
 
 export default function Auth() {
   const vm = useAuthViewModel();

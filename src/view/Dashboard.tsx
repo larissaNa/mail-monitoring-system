@@ -4,7 +4,7 @@ import { ChartsSection } from "./components/dashboard/ChartsSection";
 import { TopDestinatariosCard } from "./components/dashboard/TopDestinatariosCard";
 import { QuickActionsCard } from "./components/dashboard/QuickActionsCard";
 
-import { useDashboardViewModel } from "@/viewmodel/useDashboardViewModel";
+import { useDashboardViewModel } from "@/viewmodel/dashboard/useDashboardViewModel";
 
 export default function Dashboard() {
   const vm = useDashboardViewModel();

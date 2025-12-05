@@ -1,6 +1,6 @@
 import { PageHeader } from "./components/ui/page-header";
 import { NewEmailForm } from "./components/emails/NewEmailForm";
-import { useNewEmailViewModel } from "@/viewmodel/useNewEmailViewModel";
+import { useNewEmailViewModel } from "@/viewmodel/email/useNewEmailViewModel";
 
 export default function NewEmail() {
   const vm = useNewEmailViewModel();

@@ -2,18 +2,25 @@ import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import { User, Mail, Calendar, FileText, MapPin, ArrowLeft, Pencil } from 'lucide-react';
 import { Email } from '@/model/entities';
-import { formatters } from '@/infrastructure/lib/formatters';
 
 interface EmailDetailViewProps {
-  email: Email;
+  formatted: {
+    remetente: string;
+    destinatario: string;
+    dataEnvio: string;
+    local: string;
+    assunto: string;
+    corpo: string;
+  };
   onEdit: () => void;
   onBack: () => void;
 }
 
-export function EmailDetailView({ email, onEdit, onBack }: EmailDetailViewProps) {
+export function EmailDetailView({ formatted, onEdit, onBack }: EmailDetailViewProps) {
   return (
     <Card className="max-w-3xl animate-fade-in">
       <CardContent className="p-6 space-y-6">
+        
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex items-start gap-3">
             <div className="p-2 rounded-lg bg-primary-light">
@@ -21,16 +28,17 @@ export function EmailDetailView({ email, onEdit, onBack }: EmailDetailViewProps)
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Remetente</p>
-              <p className="font-medium">{email.remetente}</p>
+              <p className="font-medium">{formatted.remetente}</p>
             </div>
           </div>
+
           <div className="flex items-start gap-3">
             <div className="p-2 rounded-lg bg-accent-light">
               <Mail className="h-5 w-5 text-accent" />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Destinatário</p>
-              <p className="font-medium">{email.destinatario}</p>
+              <p className="font-medium">{formatted.destinatario}</p>
             </div>
           </div>
         </div>
@@ -42,20 +50,17 @@ export function EmailDetailView({ email, onEdit, onBack }: EmailDetailViewProps)
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Data</p>
-              <p className="font-medium">
-                {formatters.dateTime(email.data_envio)}
-              </p>
+              <p className="font-medium">{formatted.dataEnvio}</p>
             </div>
           </div>
+
           <div className="flex items-start gap-3">
             <div className="p-2 rounded-lg bg-success-light">
               <MapPin className="h-5 w-5 text-success" />
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Localização</p>
-              <p className="font-medium">
-                {formatters.location(email.estado, email.municipio)}
-              </p>
+              <p className="font-medium">{formatted.local}</p>
             </div>
           </div>
         </div>
@@ -66,14 +71,14 @@ export function EmailDetailView({ email, onEdit, onBack }: EmailDetailViewProps)
           </div>
           <div className="flex-1">
             <p className="text-sm text-muted-foreground">Assunto</p>
-            <p className="font-semibold text-lg">{email.assunto}</p>
+            <p className="font-semibold text-lg">{formatted.assunto}</p>
           </div>
         </div>
 
         <div className="border-t pt-6">
           <p className="text-sm font-medium text-muted-foreground mb-3">Mensagem</p>
           <div className="bg-muted/50 rounded-lg p-4 whitespace-pre-wrap">
-            {email.corpo || 'Sem conteúdo'}
+            {formatted.corpo}
           </div>
         </div>
 
@@ -82,6 +87,7 @@ export function EmailDetailView({ email, onEdit, onBack }: EmailDetailViewProps)
             <Pencil className="h-4 w-4 mr-2" />
             Editar Local
           </Button>
+
           <Button variant="outline" onClick={onBack}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Voltar
@@ -91,4 +97,3 @@ export function EmailDetailView({ email, onEdit, onBack }: EmailDetailViewProps)
     </Card>
   );
 }
-

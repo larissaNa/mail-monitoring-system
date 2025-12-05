@@ -1,7 +1,7 @@
 import { PageHeader } from "./components/ui/page-header";
 import { EmailFilters } from "./components/emails/EmailFilters";
-import { EmailTable } from "./components/emails/EmailTable";
-import { useEmailListViewModel } from "@/viewmodel/useEmailListViewModel";
+import { EmailTableView } from "./components/emails/EmailTable";
+import { useEmailListViewModel } from "@/viewmodel/email/useEmailListViewModel";
 
 export default function EmailList() {
   const vm = useEmailListViewModel();
@@ -20,12 +20,17 @@ export default function EmailList() {
         onDateChange={vm.onDateChange}
       />
 
-      <EmailTable
-        emails={vm.emails}
+      <EmailTableView
+        rows={vm.rows}
         isLoading={vm.isLoading}
         currentPage={vm.currentPage}
         totalPages={vm.totalPages}
         onPageChange={vm.onPageChange}
+        onRequestDelete={vm.onRequestDelete}
+        onCancelDelete={vm.onCancelDelete}
+        onConfirmDelete={vm.onConfirmDelete}
+        deleteDialogOpen={vm.deleteDialogOpen}
+        deleting={vm.deleting}
       />
     </div>
   );
