@@ -1,142 +1,189 @@
-# Sistema de Recebimento e Classificação de E-mails
 
-### Supabase • TypeScript • React 
+# MailGestor
 
-Este projeto implementa um sistema completo para **receber e-mails automaticamente**, salvar no banco de dados Supabase e exibi-los em uma interface desenvolvida em **React + TypeScript**.
-A integração é feita por meio de uma **Supabase Edge Function** que recebe webhooks do **Resend Inbound Email**.
+Este projeto implementa um sistema completo para recebimento automático de e-mails, armazenamento no banco de dados Supabase e exibição em uma interface desenvolvida com React e TypeScript. A integração é realizada por meio de uma Supabase Edge Function que recebe webhooks do Resend Inbound Email.
 
 ---
 
-# Tecnologias Utilizadas
+## Tecnologias Utilizadas
 
-* **React + TypeScript** (frontend)
-* **Supabase**
-
-  * Edge Functions
-  * PostgreSQL
-  * Row Level Security
-  * Supabase CLI
-* **Resend Inbound Email** (webhook de e-mails)
-* **Node / TS**
-* **Scoop** (instalação simples no Windows)
+- **Frontend**: React + TypeScript + Vite
+- **UI Components**: shadcn/ui (Radix UI)
+- **Backend**: Supabase (PostgreSQL + Edge Functions)
+- **Integração**: Resend Inbound Email (webhooks)
+- **Autenticação**: Supabase Auth
+- **State Management**: TanStack React Query
+- **Ferramentas adicionais**:
+  - Supabase CLI
+  - Row Level Security
+  - Node.js + TypeScript
 
 ---
 
-# Instalação do Ambiente
+## Arquitetura do Projeto
 
-## 1. Instalar Scoop (Windows)
+O projeto segue uma arquitetura modular baseada em MVVM (Model-View-ViewModel), com separação clara de responsabilidades. A estrutura de diretórios reflete essa organização:
 
-No PowerShell do Vscode, execute:
+```
+src/
+├── infrastructure/
+│   └── auth/                  # Configurações e utilitários de autenticação
+├── lib/                       # Funções auxiliares e bibliotecas internas
+├── supabase/                 # Configurações e integração com Supabase
+├── model/
+│   ├── entities/              # Definição das entidades de domínio
+│   ├── repositories/          # Acesso a dados e integração com APIs externas
+│   └── services/              # Regras de negócio e orquestração de dados
+├── view/                      # Componentes visuais da interface
+├── viewmodel/
+│   ├── auth/                  # Lógica de autenticação
+│   ├── dashboard/             # Lógica da tela de estatísticas
+│   ├── email/                 # Lógica da tela de e-mails
+│   ├── layout/                # Lógica de layout e estrutura visual
+│   ├── sidebar/               # Lógica da navegação lateral
+│   └── useNotFoundViewModel.ts # ViewModel para página de erro 404
+```
+
+Essa organização facilita a escalabilidade, testabilidade e manutenção do sistema, promovendo separação entre interface, lógica de apresentação, regras de negócio e persistência de dados.
+
+---
+
+## Fluxo de Dados MVVM
+
+```
+VIEW (Componentes)
+    ↓
+VIEWMODEL (useXxxViewModel)
+    ↓
+SERVICE (EmailService, LocationService)
+    ↓
+REPOSITORY (EmailRepository, LocationRepository)
+    ↓
+API/DATABASE (Supabase, IBGE)
+```
+
+---
+
+## Preparação do Ambiente
+
+Instale as dependências:
+
+```bash
+npm install
+```
+
+### 1. Instalar Scoop (Windows)
+
+No PowerShell do VSCode, execute:
 
 ```powershell
 Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 irm get.scoop.sh | iex
 ```
 
-## 2. Instalar Supabase CLI
+### 2. Instalar Supabase CLI
 
 ```powershell
 scoop install supabase
 ```
 
-## 3. Login no Supabase
+### 3. Login no Supabase
 
 ```bash
 supabase login
 ```
 
----
+Execute o projeto:
 
-# 📁 Estrutura do Projeto
-
-```
-supabase/
- ├─ functions/
- │   └─ inbound-email/
- │        ├─ index.ts         # Edge Function principal
- │        ├─ README.md        # Documentação da Function
- │        └─ test-example.sh  # Script de teste
- ├─ migrations/
- │   └─ 20251203000000_inbound_email_setup.sql
-src/
- ├─ services/
- │   └─ emailService.ts       # Salvamento de e-mails inbound
- ├─ types/
- │   └─ resend.ts             # Tipagem do payload do Resend
-RESEND_INBOUND_SETUP.md       # Passo a passo da integração
+```bash
+npm run dev
 ```
 
 ---
 
-# Como Funciona o Sistema
+## Como Funciona o Sistema
 
 1. Um e-mail é enviado para `exemplo@gmail.com`
-2. O Resend recebe o conteúdo e dispara um **webhook**
+2. O Resend recebe o conteúdo e dispara um webhook
 3. A Edge Function `/inbound-email` recebe o webhook
 4. Valida assinatura e campos obrigatórios
 5. Insere o e-mail na tabela `emails` usando Service Role
 6. O frontend exibe automaticamente nas telas:
-
-   * Pendentes
-   * Lista de e-mails
-   * Estatísticas do Dashboard
-
----
-
-# Edge Function – inbound-email
-
-Local:
-
-```
-supabase/functions/inbound-email/index.ts
-```
-
-Ela é responsável por:
-
-✔ Receber o webhook do Resend
-✔ Validar a assinatura (`resend-signature`)
-✔ Validar campos obrigatórios
-✔ Processar e salvar o e-mail no banco
-✔ Tratar erros e gerar logs
+   - Pendentes
+   - Lista de e-mails
+   - Estatísticas do Dashboard
 
 ---
 
-# 🔧 Variáveis de Ambiente Necessárias
+## Documentação dos Services com JSDoc
 
-| Variável                    | Descrição                             |
-| --------------------------- | ------------------------------------- |
-| `RESEND_WEBHOOK_SECRET`     | Secret configurado no Resend          |
-| `SUPABASE_URL`              | Automático em Edge Functions          |
-| `SUPABASE_SERVICE_ROLE_KEY` | Service role do Supabase (automático) |
+Este projeto utiliza JSDoc para gerar documentação automática dos serviços.
 
-Configurar secret:
+### Passo a passo
+
+1. Transpile os arquivos TypeScript para JavaScript:
+
+   ```bash
+   npx tsc --outDir dist
+   ```
+
+2. Gere a documentação com JSDoc:
+
+   ```bash
+   npx jsdoc dist/model/services/NomeDoArquivo.js -d docs
+   ```
+
+   - Substitua `NomeDoArquivo.js` pelo service desejado.
+   - A documentação será gerada na pasta `docs`.
+
+3. Abra o arquivo `docs/index.html` no navegador para visualizar.
+
+Para documentar todos os services de uma vez:
 
 ```bash
-supabase secrets set RESEND_WEBHOOK_SECRET=sua_chave_secreta
+npx jsdoc dist/model/services/*.js -d docs
 ```
 
 ---
 
-# Deploy da Edge Function
+## Testes Unitários
+
+Este projeto utiliza Jest com suporte a TypeScript (ts-jest) para garantir a qualidade do código.
+
+### Estrutura dos testes
+
+- Os testes estão organizados em:
+  - `__test__/repositories`: testes dos repositórios
+  - `__test__/services`: testes dos serviços
+
+### Estratégias de Mock
+
+- Supabase: mock dos métodos (`select`, `insert`, etc.)
+- Fetch API: simulação da API do IBGE
+- Cache interno: método `__resetCache` para limpar estado entre testes
+
+### Executando os testes
 
 ```bash
-supabase functions deploy inbound-email
+npm test
 ```
 
-Ver logs:
+Para rodar um teste específico:
 
 ```bash
-supabase functions logs inbound-email --tail
+npm test -- __test__/repositories/EmailRepository.test.ts
 ```
 
-Rodar local:
+### Cobertura
 
-```bash
-supabase functions serve inbound-email
-```
+- EmailRepository: CRUD, estatísticas e agrupamentos
+- ProfileRepository: operações de perfil
+- LocationRepository: busca via IBGE com cache
+- Services: lógica de negócio
 
 ---
 
-# Autores
+## Autores
 
-Projeto desenvolvido por **Larissa Souza** e **Maria Isabelly**
+* Larissa Souza - [larissaNa](https://github.com/larissaNa)
+* Maria Isabelly - [Isabellybrt](https://github.com/Isabellybrt)

@@ -1,16 +1,17 @@
 {
-  "files": [],
-  "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }],
   "compilerOptions": {
-    "baseUrl": ".",
+    "target": "ES6",                // versão de JS de saída
+    "module": "commonjs",           // formato de módulos
+    "rootDir": "src",               // pasta de origem
+    "outDir": "dist",               // pasta de saída
+    "esModuleInterop": true,        // compatibilidade com import/export
+    "strict": true,                 // boas práticas de tipagem
+    "skipLibCheck": true,           // ignora checagem de libs
+    "baseUrl": ".",                 // base para paths
     "paths": {
       "@/*": ["./src/*"]
-    },
-    "noImplicitAny": false,
-    "noUnusedParameters": false,
-    "skipLibCheck": true,
-    "allowJs": true,
-    "noUnusedLocals": false,
-    "strictNullChecks": false
-  }
+    }
+  },
+  "include": ["src/**/*"],          // inclui todos os arquivos TS dentro de src
+  "exclude": ["node_modules", "dist"]
 }
