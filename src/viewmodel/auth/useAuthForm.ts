@@ -74,7 +74,7 @@ export function useSignupForm() {
         toast({ variant: 'destructive', title: 'Erro ao cadastrar', description: error.message });
       }
     } else {
-      toast({ title: 'Conta criada com sucesso!', description: 'Você já pode fazer login.' });
+      toast({ title: 'Conta criada com sucesso!', description: 'Verifique seu e-mail.' });
     }
   };
 
